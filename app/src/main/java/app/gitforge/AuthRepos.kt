@@ -3,6 +3,7 @@ package app.gitforge
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -41,10 +42,26 @@ fun LoginScreen(onDone: () -> Unit) {
     var scopes by remember { mutableStateOf(DEFAULT_SCOPES) }
     var device by remember { mutableStateOf<GitHubApi.Device?>(null) }
     var job by remember { mutableStateOf<Job?>(null) }
+    var secret by remember { mutableStateOf(Graph.store.clientSecret) }
 
     suspend fun finish(t: String) {
         val u = Graph.api.send("GET", "/user", token = t).js().o()
         Graph.store.addAccount(Account(u.s("login"), t, u.s("avatar_url")))
+    }
+
+    val cb = Graph.oauthCallback
+    LaunchedEffect(cb) {
+        if (cb != null) {
+            Graph.oauthCallback = null
+            val code = cb.getQueryParameter("code")
+            val okState = cb.getQueryParameter("state") == Graph.oauthState
+            if (code != null && okState) {
+                act.run("login/browser", onOk = onDone) {
+                    val t = Graph.api.exchangeCode(Graph.store.clientId, Graph.store.clientSecret, code, "gitforge://oauth")
+                    finish(t)
+                }
+            } else act.toast(cb.getQueryParameter("error_description") ?: "OAuth error")
+        }
     }
 
     Scaffold { pad ->
@@ -58,6 +75,7 @@ fun LoginScreen(onDone: () -> Unit) {
             TabRow(selectedTabIndex = tab) {
                 Tab(tab == 0, { tab = 0 }, text = { Text(stringResource(R.string.login_device)) })
                 Tab(tab == 1, { tab = 1 }, text = { Text(stringResource(R.string.login_token)) })
+                Tab(tab == 2, { tab = 2 }, text = { Text(stringResource(R.string.login_browser)) })
             }
             if (tab == 0) {
                 OutlinedTextField(clientId, { clientId = it }, label = { Text(stringResource(R.string.client_id)) },
@@ -99,6 +117,18 @@ fun LoginScreen(onDone: () -> Unit) {
                         }
                     }
                 }
+            } else if (tab == 2) {
+                OutlinedTextField(clientId, { clientId = it }, label = { Text(stringResource(R.string.client_id)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(secret, { secret = it }, label = { Text(stringResource(R.string.client_secret)) }, singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(scopes, { scopes = it }, label = { Text(stringResource(R.string.scopes)) }, modifier = Modifier.fillMaxWidth())
+                Text(stringResource(R.string.browser_help), style = MaterialTheme.typography.bodySmall)
+                Button(enabled = clientId.isNotBlank() && secret.isNotBlank(), onClick = {
+                    Graph.store.clientId = clientId.trim(); Graph.store.clientSecret = secret.trim()
+                    val st = java.util.UUID.randomUUID().toString()
+                    Graph.oauthState = st
+                    uri.openUri("https://github.com/login/oauth/authorize?client_id=${Uri.encode(clientId.trim())}&redirect_uri=${Uri.encode("gitforge://oauth")}&scope=${Uri.encode(scopes.trim())}&state=$st")
+                }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.sign_in_browser)) }
             } else {
                 OutlinedTextField(token, { token = it }, label = { Text(stringResource(R.string.pat)) },
                     singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())

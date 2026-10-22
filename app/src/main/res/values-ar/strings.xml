@@ -167,4 +167,9 @@
     <string name="import_">استيراد</string>
     <string name="unlock">فتح القفل</string>
     <string name="notif_channel">نتائج البناء</string>
+    <string name="login_browser">المتصفح</string>
+    <string name="client_secret">السر (Client Secret)</string>
+    <string name="browser_help">اجعل Authorization callback URL في الـ OAuth App هو gitforge://oauth. السر يُخزَّن على هذا الهاتف فقط ومشفّرًا.</string>
+    <string name="sign_in_browser">تسجيل الدخول من المتصفح</string>
+    <string name="fill_name">ملء الاسم تلقائيًا</string>
 </resources>

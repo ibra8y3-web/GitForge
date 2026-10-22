@@ -163,6 +163,19 @@ class GitHubApi(private val activeToken: () -> String?) {
         }
     }
 
+    suspend fun exchangeCode(clientId: String, secret: String, code: String, redirect: String): String =
+        withContext(Dispatchers.IO) {
+            val req = Request.Builder().url("https://github.com/login/oauth/access_token")
+                .header("Accept", "application/json")
+                .post(FormBody.Builder().add("client_id", clientId).add("client_secret", secret)
+                    .add("code", code).add("redirect_uri", redirect).build()).build()
+            http.newCall(req).execute().use { r ->
+                val o = json.parseToJsonElement(r.body?.string().orEmpty()).o()
+                if (o.s("access_token").isEmpty()) throw ApiException(r.code, o.s("error_description").ifEmpty { o.s("error").ifEmpty { r.message } })
+                o.s("access_token")
+            }
+        }
+
     suspend fun devicePoll(clientId: String, d: Device): String {
         var wait = d.interval
         val deadline = System.currentTimeMillis() + d.expires * 1000L

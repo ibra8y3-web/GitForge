@@ -17,6 +17,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -171,22 +176,29 @@ fun ConfirmDialog(text: String, onDismiss: () -> Unit, onYes: () -> Unit) {
     )
 }
 
-/** The destructive action only unlocks after the exact word/name is typed. */
+/** The destructive action only unlocks after the exact name is typed (case/space tolerant; full or short name). */
 @Composable
 fun TypeConfirmDialog(title: String, word: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     var typed by remember { mutableStateOf("") }
+    val short = word.substringAfter('/')
+    val ok = typed.trim().let { it.equals(word, true) || it.equals(short, true) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title, color = MaterialTheme.colorScheme.error) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.type_to_confirm, word))
-                OutlinedTextField(typed, { typed = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Text(stringResource(R.string.type_to_confirm, "\u2066$word\u2069"))
+                OutlinedTextField(
+                    typed, { typed = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    textStyle = TextStyle(textDirection = TextDirection.Ltr),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, keyboardType = KeyboardType.Uri)
+                )
+                TextButton(onClick = { typed = word }) { Text(stringResource(R.string.fill_name)) }
             }
         },
         confirmButton = {
-            TextButton(enabled = typed == word, onClick = { onConfirm(); onDismiss() }) {
-                Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+            TextButton(enabled = ok, onClick = { onConfirm(); onDismiss() }) {
+                Text(stringResource(R.string.delete), color = if (ok) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline)
             }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }

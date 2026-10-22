@@ -72,6 +72,10 @@ class Store(private val ctx: Context) {
         get() = prefs.getString("client_id", "") ?: ""
         set(v) { prefs.edit().putString("client_id", v).apply() }
 
+    var clientSecret: String
+        get() = prefs.getString("client_secret", "") ?: ""
+        set(v) { prefs.edit().putString("client_secret", v).apply() }
+
     var lock: Boolean
         get() = prefs.getBoolean("lock", false)
         set(v) { prefs.edit().putBoolean("lock", v).apply() }
@@ -139,6 +143,8 @@ object Installer {
 object Graph {
     lateinit var app: Application
     lateinit var store: Store
+    var oauthState: String? = null
+    var oauthCallback by mutableStateOf<Uri?>(null)
     val api: GitHubApi by lazy { GitHubApi { store.activeToken() } }
 
     fun init(a: Application) {

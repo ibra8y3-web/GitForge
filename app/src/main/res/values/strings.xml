@@ -167,4 +167,9 @@
     <string name="import_">Import</string>
     <string name="unlock">Unlock</string>
     <string name="notif_channel">Build results</string>
+    <string name="login_browser">Browser</string>
+    <string name="client_secret">OAuth App Client Secret</string>
+    <string name="browser_help">Set the OAuth App\'s Authorization callback URL to gitforge://oauth. The secret is stored only on this phone, encrypted.</string>
+    <string name="sign_in_browser">Sign in with browser</string>
+    <string name="fill_name">Fill in the name</string>
 </resources>
