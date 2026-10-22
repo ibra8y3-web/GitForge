@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.GitForge" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="Theme.RepoDeck" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/brand_bg</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>

@@ -1,4 +1,4 @@
-package app.gitforge
+package app.repodeck
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

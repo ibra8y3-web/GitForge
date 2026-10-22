@@ -1,4 +1,4 @@
-package app.gitforge
+package app.repodeck
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -41,7 +41,7 @@ fun UploadScreen(nav: NavController) {
     var repoName by remember { mutableStateOf("") }
     var priv by remember { mutableStateOf(true) }
     var branch by remember { mutableStateOf("main") }
-    var message by remember { mutableStateOf("Initial upload from GitForge") }
+    var message by remember { mutableStateOf("Initial upload from RepoDeck") }
     var force by remember { mutableStateOf(false) }
     var addIgnore by remember { mutableStateOf(true) }
     var showFlagged by remember { mutableStateOf(false) }
@@ -59,7 +59,7 @@ fun UploadScreen(nav: NavController) {
     Scaffold(topBar = {
         TopAppBar(title = { Text(stringResource(R.string.upload_project)) },
             navigationIcon = { IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } })
-    }) { pad ->
+    }, bottomBar = { AppBottomBar(nav, "upload") }) { pad ->
         Column(Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Button(onClick = { picker.launch(null) }, Modifier.fillMaxWidth()) { Icon(Icons.Default.FolderOpen, null); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.choose_folder)) }
             if (act.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -152,7 +152,7 @@ fun SettingsScreen(nav: NavController) {
     Scaffold(topBar = {
         TopAppBar(title = { Text(stringResource(R.string.settings)) },
             navigationIcon = { IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } })
-    }) { pad ->
+    }, bottomBar = { AppBottomBar(nav, "settings") }) { pad ->
         Column(Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SectionTitle(stringResource(R.string.language))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -182,11 +182,11 @@ fun SettingsScreen(nav: NavController) {
             SectionTitle(stringResource(R.string.backup))
             Text(stringResource(R.string.backup_note), style = MaterialTheme.typography.bodySmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { export.launch("gitforge-settings.json") }) { Text(stringResource(R.string.export)) }
+                OutlinedButton(onClick = { export.launch("repodeck-settings.json") }) { Text(stringResource(R.string.export)) }
                 OutlinedButton(onClick = { importer.launch(arrayOf("application/json")) }) { Text(stringResource(R.string.import_)) }
             }
             TextButton(onClick = { nav.navigate("logs") }) { Text(stringResource(R.string.op_log)) }
-            Text("GitForge 1.0.0", style = MaterialTheme.typography.labelSmall)
+            Text("RepoDeck 1.0.0", style = MaterialTheme.typography.labelSmall)
         }
     }
 }

@@ -1,4 +1,4 @@
-package app.gitforge
+package app.repodeck
 
 import android.content.Context
 import android.net.Uri
@@ -104,6 +104,19 @@ object ZipTools {
             z.getInputStream(e).use { i -> out.outputStream().use { o -> i.copyTo(o) } }
             return out
         }
+    }
+
+    fun extractApks(f: File, outDir: File, prefix: String): List<File> {
+        outDir.mkdirs()
+        val out = mutableListOf<File>()
+        ZipFile(f).use { z ->
+            for (e in z.entries().toList().filter { !it.isDirectory && it.name.endsWith(".apk") }) {
+                val dst = File(outDir, "$prefix-${File(e.name).name}")
+                z.getInputStream(e).use { i -> dst.outputStream().use { o -> i.copyTo(o) } }
+                out += dst
+            }
+        }
+        return out
     }
 
     fun readLogZip(f: File, maxChars: Int = 200_000): String {

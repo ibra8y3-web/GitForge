@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">جيت فورج</string>
+    <string name="app_name">RepoDeck</string>
     <string name="ok">موافق</string>
     <string name="cancel">إلغاء</string>
     <string name="retry">إعادة المحاولة</string>
@@ -101,7 +101,7 @@
     <string name="download">تنزيل</string>
     <string name="install">تثبيت APK</string>
     <string name="no_apk">لا يوجد APK في هذا الملف</string>
-    <string name="allow_install">اسمح بتثبيت التطبيقات من GitForge ثم اضغط تثبيت مرة أخرى.</string>
+    <string name="allow_install">اسمح بتثبيت التطبيقات من RepoDeck ثم اضغط تثبيت مرة أخرى.</string>
     <string name="full_logs">تنزيل سجلات التشغيل كاملة</string>
     <string name="new_release">إصدار جديد</string>
     <string name="attach_file">إرفاق ملف</string>
@@ -169,8 +169,42 @@
     <string name="notif_channel">نتائج البناء</string>
     <string name="login_browser">المتصفح</string>
     <string name="client_secret">السر (Client Secret)</string>
-    <string name="browser_help">اجعل Authorization callback URL في الـ OAuth App هو gitforge://oauth. السر يُخزَّن على هذا الهاتف فقط ومشفّرًا.</string>
+    <string name="browser_help">اجعل Authorization callback URL في الـ OAuth App هو repodeck://oauth. السر يُخزَّن على هذا الهاتف فقط ومشفّرًا.</string>
     <string name="sign_in_browser">تسجيل الدخول من المتصفح</string>
     <string name="fill_name">ملء الاسم تلقائيًا</string>
     <string name="auto_release">إصدار تلقائي برقم نسخة (yes / no)</string>
+    <string name="tagline">مركز التحكم الكامل في GitHub</string>
+    <string name="continue_github">المتابعة باستخدام GitHub</string>
+    <string name="redirect_hint">سيتم نقلك إلى GitHub في المتصفح للموافقة على الوصول. التطبيق لا يرى كلمة مرورك أبدًا.</string>
+    <string name="other_options">خيارات تسجيل دخول أخرى</string>
+    <string name="onetap_setup">تسجيل الدخول بضغطة واحدة غير مفعّل في هذه النسخة. أنشئ OAuth App مرة واحدة (مع تفعيل Device Flow) وأضف الـ Client ID كمتغيّر في المستودع باسم OAUTH_CLIENT_ID ثم أعد البناء. حتى ذلك الحين استخدم الخيارات بالأسفل.</string>
+    <string name="code_copied">تم نسخ الكود – الصقه في GitHub</string>
+    <string name="downloads">التنزيلات</string>
+    <string name="no_downloads">الملفات التي تنزّلها ستُحفظ هنا</string>
+    <string name="share">مشاركة</string>
+    <string name="save_to_phone">حفظ في تنزيلات الهاتف</string>
+    <string name="saved_public">تم الحفظ داخل التطبيق وفي مجلد Download/RepoDeck بالهاتف</string>
+    <string name="saved_app_only">تم الحفظ داخل التطبيق (تعذّر النسخ إلى تنزيلات الهاتف)</string>
+    <string name="welcome">أهلًا، %1$s</string>
+    <string name="repo_stats">%1$d مستودع · %2$d خاص</string>
+    <string name="tab_search">بحث</string>
+    <string name="search_code">بحث داخل الكود</string>
+    <string name="in_filename">اسم الملف</string>
+    <string name="search_note">البحث في الفرع الافتراضي فقط (بحث GitHub).</string>
+    <string name="results_count">%1$d نتيجة</string>
+    <string name="no_results">لا توجد نتائج</string>
+    <string name="preview">معاينة</string>
+    <string name="edit_mode">تحرير</string>
+    <string name="pin_widget">تثبيت في الودجت</string>
+    <string name="widget_pinned">تم التثبيت. أضف ودجت RepoDeck من الشاشة الرئيسية.</string>
+    <string name="widget_desc">حالة آخر بناء</string>
+    <string name="widget_no_repo">افتح RepoDeck > الإجراءات > تثبيت في الودجت</string>
+    <string name="widget_running">قيد التشغيل…</string>
+    <string name="widget_success">نجح البناء</string>
+    <string name="widget_failed">فشل البناء</string>
+    <string name="widget_cancelled">أُلغي</string>
+    <string name="widget_failed_at">فشل عند: %1$s</string>
+    <string name="widget_error">تعذّر تحميل الحالة</string>
+    <string name="diagnose">تشخيص الفشل</string>
+    <string name="diag_none">لا توجد مهمة فاشلة في هذا التشغيل</string>
 </resources>

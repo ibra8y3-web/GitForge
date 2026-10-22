@@ -1,8 +1,8 @@
-<p align="center"><img src="docs/banner.png" alt="GitForge"/></p>
+<p align="center"><img src="docs/banner.png" alt="RepoDeck"/></p>
 
 <p align="center">
   <img src="docs/icon.png" width="96" alt="icon"/><br/>
-  <b>GitForge</b> — a real, native Android client for GitHub.<br/>
+  <b>RepoDeck</b> — a real, native Android client for GitHub.<br/>
   <a href="#english">English</a> · <a href="#arabic">العربية</a>
 </p>
 
@@ -10,7 +10,7 @@
 
 ## English
 
-GitForge talks directly to the **GitHub REST API** and runs **real Git (JGit)** on the phone. There is no mock data and no simulation anywhere in the code: every list, log and artifact you see comes from GitHub.
+RepoDeck talks directly to the **GitHub REST API** and runs **real Git (JGit)** on the phone. There is no mock data and no simulation anywhere in the code: every list, log and artifact you see comes from GitHub.
 
 ### Features (implemented)
 
@@ -23,6 +23,9 @@ GitForge talks directly to the **GitHub REST API** and runs **real Git (JGit)** 
 | Upload project | Pick a folder from phone storage → scan → upload to a new or existing repo via real `git push`. Secret scanner blocks `.env`, keystores, private keys, tokens, files > 100 MB. Auto-skips `build/`, `node_modules/`… Optional smart `.gitignore` |
 | Collaboration | Issues, pull requests (create, comment, merge/squash/rebase, approve / request changes), labels, milestones, collaborators |
 | Build & release | Detect project type, add workflow templates (Android / Node), dispatch workflows, live run list with auto-refresh + notification on completion, jobs & step status, **real job logs and full log zip**, re-run / re-run failed / cancel, download artifacts, verify (SHA-256 + zip integrity), **install APK**, create releases and attach files |
+| Files & search | Markdown preview for `.md` files, GitHub code search inside a repo (content or file name) |
+| Build diagnosis | **Diagnose failure** reads the failed job log and gives likely causes + concrete fixes (Gradle, Android, npm, permissions, signing…) |
+| Widget | Home-screen widget with the real status of the latest build of the pinned repo (Actions › Pin to widget) |
 | Admin | Webhooks, deploy keys, notifications inbox |
 | Platform | Operations log (success/failure, persisted), storage manager, settings export/import **without secrets**, English + Arabic with full RTL |
 
@@ -35,12 +38,20 @@ GitForge talks directly to the **GitHub REST API** and runs **real Git (JGit)** 
 
 ### Build the APK
 
-**GitHub Actions (recommended):** push this folder to a repo (you can do it with GitForge itself) — `.github/workflows/build.yml` builds debug + release APKs and uploads them as artifacts. Push a tag like `v1.0.0` to publish a Release.
+**GitHub Actions (recommended):** push this folder to a repo (you can do it with RepoDeck itself) — `.github/workflows/build.yml` builds debug + release APKs and uploads them as artifacts. Push a tag like `v1.0.0` to publish a Release.
 Optional secrets for a signed release: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
 
 **Locally:** Android Studio (Koala+) → open the folder → Run. Or `gradle assembleDebug` with Gradle 8.9 and JDK 17.
 
-### First sign-in
+### One-tap "Continue with GitHub" (like Manus)
+
+Register **one** OAuth App (GitHub → Settings → Developer settings → OAuth Apps, tick **Enable Device Flow**), then add its Client ID as a repository **variable** named `OAUTH_CLIENT_ID` (Settings → Secrets and variables → Actions → Variables). Every build then ships with a single **Continue with GitHub** button: the app copies the code and opens GitHub in the browser. No client secret is ever inside the app.
+
+### Downloads that stay
+
+Artifacts and APKs you download are kept in the app (**Downloads** tab, survive restarts / clear cache) and also copied to `Download/RepoDeck` on the phone. The CI builds a single `RepoDeck.apk` (release) and uploads it as the artifact and to the release.
+
+### First sign-in (manual options)
 
 1. GitHub → Settings → Developer settings → OAuth Apps → *New* → tick **Enable Device Flow**.
 2. Paste the **Client ID** in the app → *Start device login* → enter the code on GitHub.
@@ -69,7 +80,7 @@ Screenshots are intentionally not included until the first build is installed an
 
 ## العربية
 
-**GitForge** تطبيق أندرويد أصلي يتصل مباشرة بـ **GitHub REST API** ويشغّل **Git حقيقي (JGit)** على الهاتف. لا توجد أي بيانات تجريبية أو محاكاة في الكود: كل قائمة وسجل وملف ناتج تراه يأتي من GitHub.
+**RepoDeck** تطبيق أندرويد أصلي يتصل مباشرة بـ **GitHub REST API** ويشغّل **Git حقيقي (JGit)** على الهاتف. لا توجد أي بيانات تجريبية أو محاكاة في الكود: كل قائمة وسجل وملف ناتج تراه يأتي من GitHub.
 
 ### الميزات المنفذة
 

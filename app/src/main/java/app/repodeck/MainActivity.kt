@@ -1,4 +1,4 @@
-package app.gitforge
+package app.repodeck
 
 import android.Manifest
 import android.content.Intent
@@ -43,9 +43,13 @@ class MainActivity : AppCompatActivity() {
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
 
+        if (Build.VERSION.SDK_INT < 29 &&
+            checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+        ) requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
+
         unlocked = !Graph.store.lock
         setContent {
-            GitForgeTheme {
+            RepoDeckTheme {
                 if (unlocked) AppRoot() else LockScreen { authenticate() }
             }
         }
@@ -57,7 +61,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleIntent(i: Intent?) {
-        i?.data?.takeIf { it.scheme == "gitforge" && it.host == "oauth" }?.let { Graph.oauthCallback = it }
+        i?.data?.takeIf { it.scheme == "repodeck" && it.host == "oauth" }?.let { Graph.oauthCallback = it }
     }
 
     override fun onStart() {
@@ -102,5 +106,6 @@ fun AppRoot() {
         composable("upload") { UploadScreen(nav) }
         composable("settings") { SettingsScreen(nav) }
         composable("logs") { LogsScreen(nav) }
+        composable("downloads") { DownloadsScreen(nav) }
     }
 }

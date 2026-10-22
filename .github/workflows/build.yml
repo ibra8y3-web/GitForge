@@ -32,25 +32,30 @@ jobs:
           fi
       - name: Build
         env:
+          OAUTH_CLIENT_ID: ${{ vars.OAUTH_CLIENT_ID }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: gradle assembleDebug assembleRelease --stacktrace
+        run: gradle assembleRelease --stacktrace
+      - name: Collect APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk dist/RepoDeck.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: GitForge-apk
-          path: app/build/outputs/apk/**/*.apk
+          name: RepoDeck-apk
+          path: dist/*.apk
       - name: Publish release (auto version on main)
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
+          tag_name: v1.1.${{ github.run_number }}
           name: Build ${{ github.run_number }}
           target_commitish: ${{ github.sha }}
-          files: app/build/outputs/apk/release/*.apk
+          files: dist/*.apk
           generate_release_notes: true
       - name: Publish release (manual tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/release/*.apk
+          files: dist/*.apk

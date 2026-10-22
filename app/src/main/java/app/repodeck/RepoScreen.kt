@@ -1,4 +1,4 @@
-package app.gitforge
+package app.repodeck
 
 import android.net.Uri
 import android.util.Base64
@@ -33,7 +33,7 @@ import kotlinx.serialization.json.JsonObject
 fun RepoScreen(nav: NavController, owner: String, name: String) {
     val repo = rememberLoader(owner, name) { Graph.api.get("/repos/$owner/$name").o() }
     var tab by remember { mutableIntStateOf(0) }
-    val tabs = listOf(R.string.tab_files, R.string.tab_branches, R.string.tab_commits, R.string.tab_actions,
+    val tabs = listOf(R.string.tab_files, R.string.tab_search, R.string.tab_branches, R.string.tab_commits, R.string.tab_actions,
         R.string.tab_releases, R.string.tab_issues, R.string.tab_prs, R.string.tab_local, R.string.tab_settings)
     var ref by remember { mutableStateOf("") }
     Scaffold(topBar = {
@@ -52,13 +52,14 @@ fun RepoScreen(nav: NavController, owner: String, name: String) {
                     }
                     when (tab) {
                         0 -> FilesTab(owner, name, cur)
-                        1 -> BranchesTab(owner, name, cur) { ref = it; tab = 0 }
-                        2 -> CommitsTab(owner, name, cur)
-                        3 -> ActionsTab(owner, name, cur)
-                        4 -> ReleasesTab(owner, name, cur)
-                        5 -> ThreadsTab(owner, name, false)
-                        6 -> ThreadsTab(owner, name, true)
-                        7 -> LocalTab(owner, name)
+                        1 -> SearchTab(owner, name, r.s("default_branch"))
+                        2 -> BranchesTab(owner, name, cur) { ref = it; tab = 0 }
+                        3 -> CommitsTab(owner, name, cur)
+                        4 -> ActionsTab(owner, name, cur)
+                        5 -> ReleasesTab(owner, name, cur)
+                        6 -> ThreadsTab(owner, name, false)
+                        7 -> ThreadsTab(owner, name, true)
+                        8 -> LocalTab(owner, name)
                         else -> RepoSettingsTab(nav, owner, name, r) { repo.reload() }
                     }
                 }
@@ -159,10 +160,13 @@ fun FileEditor(owner: String, name: String, ref: String, f: JsonObject, onClose:
     var text by remember { mutableStateOf<String?>(null) }
     var binary by remember { mutableStateOf(false) }
     var msg by remember { mutableStateOf("Update ${f.s("path")}") }
+    val isMd = f.s("name").lowercase().let { it.endsWith(".md") || it.endsWith(".markdown") }
+    var preview by remember { mutableStateOf(isMd) }
     androidx.compose.ui.window.Dialog(onDismissRequest = onClose, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize()) {
             Scaffold(topBar = {
                 TopAppBar(title = { Text(f.s("name"), maxLines = 1) }, actions = {
+                    if (isMd && text != null) TextButton(onClick = { preview = !preview }) { Text(stringResource(if (preview) R.string.edit_mode else R.string.preview)) }
                     TextButton(enabled = text != null && !act.busy, onClick = {
                         act.run("edit ${f.s("path")}", onOk = { onSaved(); onClose() }) { putFile(owner, name, ref, f.s("path"), text!!.toByteArray(), msg) }
                     }) { Text(stringResource(R.string.commit)) }
@@ -179,9 +183,11 @@ fun FileEditor(owner: String, name: String, ref: String, f: JsonObject, onClose:
                             }
                             if (binary) Text(stringResource(R.string.binary_file))
                             else text?.let { t ->
-                                OutlinedTextField(msg, { msg = it }, label = { Text(stringResource(R.string.commit_message)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                                OutlinedTextField(t, { text = it }, modifier = Modifier.fillMaxSize().padding(top = 8.dp),
-                                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp))
+                                if (isMd && preview) MarkdownView(t, Modifier.fillMaxSize()) else Column(Modifier.fillMaxSize()) {
+                                    OutlinedTextField(msg, { msg = it }, label = { Text(stringResource(R.string.commit_message)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                                    OutlinedTextField(t, { text = it }, modifier = Modifier.fillMaxWidth().weight(1f).padding(top = 8.dp),
+                                        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp))
+                                }
                             }
                         }
                     }

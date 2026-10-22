@@ -6,15 +6,17 @@ plugins {
 }
 
 android {
-    namespace = "app.gitforge"
+    namespace = "app.repodeck"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "app.gitforge"
+        applicationId = "app.repodeck"
         minSdk = 26
         targetSdk = 34
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
-        versionName = "1.0.0"
+        versionName = "1.2.0"
+        val oauthId = ((project.findProperty("OAUTH_CLIENT_ID") as String?) ?: System.getenv("OAUTH_CLIENT_ID") ?: "").trim()
+        buildConfigField("String", "OAUTH_CLIENT_ID", "\"$oauthId\"")
         resourceConfigurations += listOf("en", "ar")
     }
 
@@ -44,7 +46,10 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
 
     packaging {
         resources {

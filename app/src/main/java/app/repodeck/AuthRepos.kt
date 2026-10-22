@@ -1,10 +1,17 @@
-package app.gitforge
+package app.repodeck
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,20 +40,39 @@ private const val DEFAULT_SCOPES = "repo workflow delete_repo read:org admin:rep
 
 @Composable
 fun LoginScreen(onDone: () -> Unit) {
-    var tab by remember { mutableIntStateOf(0) }
     val act = rememberAction()
     val ctx = LocalContext.current
     val uri = LocalUriHandler.current
+    val builtIn = BuildConfig.OAUTH_CLIENT_ID
+    var advanced by remember { mutableStateOf(builtIn.isBlank()) }
+    var tab by remember { mutableIntStateOf(0) }
     var token by remember { mutableStateOf("") }
     var clientId by remember { mutableStateOf(Graph.store.clientId) }
+    var secret by remember { mutableStateOf(Graph.store.clientSecret) }
     var scopes by remember { mutableStateOf(DEFAULT_SCOPES) }
     var device by remember { mutableStateOf<GitHubApi.Device?>(null) }
     var job by remember { mutableStateOf<Job?>(null) }
-    var secret by remember { mutableStateOf(Graph.store.clientSecret) }
 
     suspend fun finish(t: String) {
         val u = Graph.api.send("GET", "/user", token = t).js().o()
         Graph.store.addAccount(Account(u.s("login"), t, u.s("avatar_url")))
+    }
+
+    fun copyCode(code: String) {
+        val cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        cm.setPrimaryClip(ClipData.newPlainText("code", code))
+    }
+
+    fun startDevice(id: String) {
+        Graph.store.clientId = id
+        job = act.run("login/device", onOk = onDone) {
+            val dc = Graph.api.deviceStart(id, scopes.trim())
+            device = dc
+            copyCode(dc.userCode)
+            act.toast(ctx.getString(R.string.code_copied))
+            uri.openUri(dc.uri)
+            try { finish(Graph.api.devicePoll(id, dc)) } finally { device = null }
+        }
     }
 
     val cb = Graph.oauthCallback
@@ -57,90 +83,84 @@ fun LoginScreen(onDone: () -> Unit) {
             val okState = cb.getQueryParameter("state") == Graph.oauthState
             if (code != null && okState) {
                 act.run("login/browser", onOk = onDone) {
-                    val t = Graph.api.exchangeCode(Graph.store.clientId, Graph.store.clientSecret, code, "gitforge://oauth")
+                    val t = Graph.api.exchangeCode(Graph.store.clientId, Graph.store.clientSecret, code, "repodeck://oauth")
                     finish(t)
                 }
             } else act.toast(cb.getQueryParameter("error_description") ?: "OAuth error")
         }
     }
 
-    Scaffold { pad ->
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF5B21B6))))) {
         Column(
-            Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            Modifier.fillMaxSize().systemBarsPadding().verticalScroll(rememberScrollState()).padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(Icons.Default.Hub, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
-            Text(stringResource(R.string.login_intro), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            TabRow(selectedTabIndex = tab) {
-                Tab(tab == 0, { tab = 0 }, text = { Text(stringResource(R.string.login_device)) })
-                Tab(tab == 1, { tab = 1 }, text = { Text(stringResource(R.string.login_token)) })
-                Tab(tab == 2, { tab = 2 }, text = { Text(stringResource(R.string.login_browser)) })
-            }
-            if (tab == 0) {
-                OutlinedTextField(clientId, { clientId = it }, label = { Text(stringResource(R.string.client_id)) },
-                    singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(scopes, { scopes = it }, label = { Text(stringResource(R.string.scopes)) },
-                    modifier = Modifier.fillMaxWidth())
-                Text(stringResource(R.string.device_help), style = MaterialTheme.typography.bodySmall)
-                TextButton(onClick = { uri.openUri("https://github.com/settings/developers") }) {
-                    Text(stringResource(R.string.open_oauth_settings))
-                }
-                val d = device
-                if (d == null) {
-                    Button(enabled = clientId.isNotBlank() && !act.busy, onClick = {
-                        Graph.store.clientId = clientId.trim()
-                        job = act.run("login/device", onOk = onDone) {
-                            val dc = Graph.api.deviceStart(clientId.trim(), scopes.trim())
-                            device = dc
-                            try {
-                                val t = Graph.api.devicePoll(clientId.trim(), dc)
-                                finish(t)
-                            } finally { device = null }
+            Spacer(Modifier.height(32.dp))
+            BrandMark(104.dp)
+            Spacer(Modifier.height(20.dp))
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, color = Color.White)
+            Text(stringResource(R.string.tagline), color = Color.White.copy(alpha = 0.75f), textAlign = TextAlign.Center)
+            Spacer(Modifier.height(32.dp))
+            Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    val d = device
+                    if (d != null) {
+                        Text(stringResource(R.string.enter_code), style = MaterialTheme.typography.bodyMedium)
+                        Text(d.userCode, style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = { copyCode(d.userCode); uri.openUri(d.uri) }) { Text(stringResource(R.string.copy_and_open)) }
+                            OutlinedButton(onClick = { job?.cancel(); device = null }) { Text(stringResource(R.string.cancel)) }
                         }
-                    }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.start_device)) }
-                } else {
-                    Card(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.enter_code), style = MaterialTheme.typography.bodyMedium)
-                            Text(d.userCode, style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = {
-                                    val cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    cm.setPrimaryClip(ClipData.newPlainText("code", d.userCode))
-                                    uri.openUri(d.uri)
-                                }) { Text(stringResource(R.string.copy_and_open)) }
-                                OutlinedButton(onClick = { job?.cancel(); device = null }) { Text(stringResource(R.string.cancel)) }
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                        Text(stringResource(R.string.waiting_authorization), style = MaterialTheme.typography.bodySmall)
+                    } else if (!advanced) {
+                        Button(
+                            onClick = { startDevice(builtIn) }, enabled = !act.busy,
+                            modifier = Modifier.fillMaxWidth().height(56.dp)
+                        ) { Icon(Icons.Default.Public, null); Spacer(Modifier.width(10.dp)); Text(stringResource(R.string.continue_github), style = MaterialTheme.typography.titleMedium) }
+                        Text(stringResource(R.string.redirect_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                        TextButton(onClick = { advanced = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.other_options)) }
+                    } else {
+                        if (builtIn.isBlank()) Text(stringResource(R.string.onetap_setup), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+                        TabRow(selectedTabIndex = tab) {
+                            Tab(tab == 0, { tab = 0 }, text = { Text(stringResource(R.string.login_device)) })
+                            Tab(tab == 1, { tab = 1 }, text = { Text(stringResource(R.string.login_token)) })
+                            Tab(tab == 2, { tab = 2 }, text = { Text(stringResource(R.string.login_browser)) })
+                        }
+                        if (tab == 0) {
+                            OutlinedTextField(clientId, { clientId = it }, label = { Text(stringResource(R.string.client_id)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                            OutlinedTextField(scopes, { scopes = it }, label = { Text(stringResource(R.string.scopes)) }, modifier = Modifier.fillMaxWidth())
+                            Text(stringResource(R.string.device_help), style = MaterialTheme.typography.bodySmall)
+                            TextButton(onClick = { uri.openUri("https://github.com/settings/developers") }) { Text(stringResource(R.string.open_oauth_settings)) }
+                            Button(enabled = clientId.isNotBlank() && !act.busy, onClick = { startDevice(clientId.trim()) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.start_device)) }
+                        } else if (tab == 2) {
+                            OutlinedTextField(clientId, { clientId = it }, label = { Text(stringResource(R.string.client_id)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                            OutlinedTextField(secret, { secret = it }, label = { Text(stringResource(R.string.client_secret)) }, singleLine = true,
+                                visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                            OutlinedTextField(scopes, { scopes = it }, label = { Text(stringResource(R.string.scopes)) }, modifier = Modifier.fillMaxWidth())
+                            Text(stringResource(R.string.browser_help), style = MaterialTheme.typography.bodySmall)
+                            Button(enabled = clientId.isNotBlank() && secret.isNotBlank(), onClick = {
+                                Graph.store.clientId = clientId.trim(); Graph.store.clientSecret = secret.trim()
+                                val st = java.util.UUID.randomUUID().toString()
+                                Graph.oauthState = st
+                                uri.openUri("https://github.com/login/oauth/authorize?client_id=${Uri.encode(clientId.trim())}&redirect_uri=${Uri.encode("repodeck://oauth")}&scope=${Uri.encode(scopes.trim())}&state=$st")
+                            }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.sign_in_browser)) }
+                        } else {
+                            OutlinedTextField(token, { token = it }, label = { Text(stringResource(R.string.pat)) },
+                                singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                            Text(stringResource(R.string.pat_help), style = MaterialTheme.typography.bodySmall)
+                            TextButton(onClick = { uri.openUri("https://github.com/settings/tokens/new?scopes=repo,workflow,delete_repo,read:org,admin:repo_hook,notifications&description=RepoDeck") }) {
+                                Text(stringResource(R.string.create_token))
                             }
-                            LinearProgressIndicator(Modifier.fillMaxWidth())
-                            Text(stringResource(R.string.waiting_authorization), style = MaterialTheme.typography.bodySmall)
+                            Button(enabled = token.isNotBlank() && !act.busy, onClick = {
+                                act.run("login/token", onOk = onDone) { finish(token.trim()) }
+                            }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.sign_in)) }
                         }
+                        if (builtIn.isNotBlank()) TextButton(onClick = { advanced = false }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
                     }
+                    if (act.busy && device == null) LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
-            } else if (tab == 2) {
-                OutlinedTextField(clientId, { clientId = it }, label = { Text(stringResource(R.string.client_id)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(secret, { secret = it }, label = { Text(stringResource(R.string.client_secret)) }, singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(scopes, { scopes = it }, label = { Text(stringResource(R.string.scopes)) }, modifier = Modifier.fillMaxWidth())
-                Text(stringResource(R.string.browser_help), style = MaterialTheme.typography.bodySmall)
-                Button(enabled = clientId.isNotBlank() && secret.isNotBlank(), onClick = {
-                    Graph.store.clientId = clientId.trim(); Graph.store.clientSecret = secret.trim()
-                    val st = java.util.UUID.randomUUID().toString()
-                    Graph.oauthState = st
-                    uri.openUri("https://github.com/login/oauth/authorize?client_id=${Uri.encode(clientId.trim())}&redirect_uri=${Uri.encode("gitforge://oauth")}&scope=${Uri.encode(scopes.trim())}&state=$st")
-                }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.sign_in_browser)) }
-            } else {
-                OutlinedTextField(token, { token = it }, label = { Text(stringResource(R.string.pat)) },
-                    singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
-                Text(stringResource(R.string.pat_help), style = MaterialTheme.typography.bodySmall)
-                TextButton(onClick = { uri.openUri("https://github.com/settings/tokens/new?scopes=repo,workflow,delete_repo,read:org,admin:repo_hook,notifications&description=GitForge") }) {
-                    Text(stringResource(R.string.create_token))
-                }
-                Button(enabled = token.isNotBlank() && !act.busy, onClick = {
-                    act.run("login/token", onOk = onDone) { finish(token.trim()) }
-                }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.sign_in)) }
             }
-            if (act.busy && device == null) LinearProgressIndicator(Modifier.fillMaxWidth())
         }
     }
 }
@@ -202,6 +222,7 @@ fun ReposScreen(nav: NavController) {
                                 }
                                 HorizontalDivider()
                                 DropdownMenuItem(text = { Text(stringResource(R.string.add_account)) }, onClick = { menu = false; nav.navigate("login") })
+                                DropdownMenuItem(text = { Text(stringResource(R.string.downloads)) }, onClick = { menu = false; nav.navigate("downloads") })
                                 DropdownMenuItem(text = { Text(stringResource(R.string.settings)) }, onClick = { menu = false; nav.navigate("settings") })
                                 DropdownMenuItem(text = { Text(stringResource(R.string.op_log)) }, onClick = { menu = false; nav.navigate("logs") })
                                 DropdownMenuItem(text = { Text(stringResource(R.string.sign_out)) }, onClick = { menu = false; Graph.store.remove(login) })
@@ -211,6 +232,7 @@ fun ReposScreen(nav: NavController) {
                 )
             }
         },
+        bottomBar = { AppBottomBar(nav, "repos") },
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = { create = true }, icon = { Icon(Icons.Default.Add, null) }, text = { Text(stringResource(R.string.new_repo)) })
         }
@@ -237,6 +259,7 @@ fun ReposScreen(nav: NavController) {
                 }
                 if (shown.isEmpty()) EmptyState(stringResource(R.string.no_repos))
                 else LazyColumn(contentPadding = PaddingValues(12.dp, 4.dp, 12.dp, 96.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    me.valueOrNull()?.let { m -> item { HeroCard(m, all) } }
                     item { Text(stringResource(R.string.repo_count, shown.size, all.size), style = MaterialTheme.typography.labelMedium) }
                     items(shown, key = { it.n("id") }) { r -> RepoCard(r, selected, nav) }
                 }
@@ -265,20 +288,28 @@ private fun RepoCard(r: JsonObject, selected: MutableList<String>, nav: NavContr
             onClick = { if (selected.isNotEmpty()) { if (isSel) selected.remove(full) else selected.add(full) } else nav.navigate("repo/${r.obj("owner").s("login")}/${r.s("name")}") },
             onLongClick = { if (!isSel) selected.add(full) }
         ),
-        colors = CardDefaults.cardColors(containerColor = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(if (r.b("private")) Icons.Default.Lock else Icons.Default.Public, null, Modifier.size(16.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(full, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                if (r.b("archived")) AssistChip(onClick = {}, label = { Text(stringResource(R.string.f_archived)) })
+                Box(Modifier.size(10.dp).clip(CircleShape).background(langColor(r.s("language"))))
+                Spacer(Modifier.width(8.dp))
+                Text(r.s("name"), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(8.dp))
+                Pill(if (r.b("private")) Icons.Default.Lock else Icons.Default.Public, stringResource(if (r.b("private")) R.string.private_repo else R.string.f_public))
             }
+            Text(r.obj("owner").s("login"), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (r.s("description").isNotBlank()) Text(r.s("description"), maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
-            Text(
-                listOf(r.s("language"), "★ ${r.n("stargazers_count")}", "⑂ ${r.n("forks_count")}", Fmt.time(r.s("pushed_at"))).filter { it.isNotBlank() }.joinToString("  ·  "),
-                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (r.s("language").isNotBlank()) Text(r.s("language"), style = MaterialTheme.typography.labelSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.Star, null, Modifier.size(14.dp)); Spacer(Modifier.width(3.dp)); Text("${r.n("stargazers_count")}", style = MaterialTheme.typography.labelSmall) }
+                Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.AccountTree, null, Modifier.size(14.dp)); Spacer(Modifier.width(3.dp)); Text("${r.n("forks_count")}", style = MaterialTheme.typography.labelSmall) }
+                Spacer(Modifier.weight(1f))
+                Text(Fmt.time(r.s("pushed_at")), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (r.b("archived")) Pill(Icons.Default.Archive, stringResource(R.string.f_archived))
         }
     }
 }

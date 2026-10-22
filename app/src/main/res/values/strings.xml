@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">GitForge</string>
+    <string name="app_name">RepoDeck</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="retry">Retry</string>
@@ -101,7 +101,7 @@
     <string name="download">Download</string>
     <string name="install">Install APK</string>
     <string name="no_apk">No APK found in this artifact</string>
-    <string name="allow_install">Allow installing apps from GitForge, then tap Install again.</string>
+    <string name="allow_install">Allow installing apps from RepoDeck, then tap Install again.</string>
     <string name="full_logs">Download full run logs</string>
     <string name="new_release">New release</string>
     <string name="attach_file">Attach file</string>
@@ -169,8 +169,42 @@
     <string name="notif_channel">Build results</string>
     <string name="login_browser">Browser</string>
     <string name="client_secret">OAuth App Client Secret</string>
-    <string name="browser_help">Set the OAuth App\'s Authorization callback URL to gitforge://oauth. The secret is stored only on this phone, encrypted.</string>
+    <string name="browser_help">Set the OAuth App\'s Authorization callback URL to repodeck://oauth. The secret is stored only on this phone, encrypted.</string>
     <string name="sign_in_browser">Sign in with browser</string>
     <string name="fill_name">Fill in the name</string>
     <string name="auto_release">Auto release with version (yes / no)</string>
+    <string name="tagline">Your GitHub command center</string>
+    <string name="continue_github">Continue with GitHub</string>
+    <string name="redirect_hint">You will be taken to GitHub in your browser to approve access. The app never sees your password.</string>
+    <string name="other_options">Other sign-in options</string>
+    <string name="onetap_setup">One-tap sign-in is not configured in this build. Register an OAuth App once (Device Flow enabled), add its Client ID as the repository variable OAUTH_CLIENT_ID, and rebuild. Until then use the options below.</string>
+    <string name="code_copied">Code copied – paste it on GitHub</string>
+    <string name="downloads">Downloads</string>
+    <string name="no_downloads">Downloaded builds will be kept here</string>
+    <string name="share">Share</string>
+    <string name="save_to_phone">Save to phone Downloads</string>
+    <string name="saved_public">Saved in the app and in Download/RepoDeck on your phone</string>
+    <string name="saved_app_only">Kept inside the app (could not copy to phone Downloads)</string>
+    <string name="welcome">Welcome, %1$s</string>
+    <string name="repo_stats">%1$d repositories · %2$d private</string>
+    <string name="tab_search">Search</string>
+    <string name="search_code">Search in code</string>
+    <string name="in_filename">File name</string>
+    <string name="search_note">Searches the default branch only (GitHub code search).</string>
+    <string name="results_count">%1$d results</string>
+    <string name="no_results">No results</string>
+    <string name="preview">Preview</string>
+    <string name="edit_mode">Edit</string>
+    <string name="pin_widget">Pin to widget</string>
+    <string name="widget_pinned">Pinned. Add the RepoDeck widget from your home screen.</string>
+    <string name="widget_desc">Latest build status</string>
+    <string name="widget_no_repo">Open RepoDeck > Actions > Pin to widget</string>
+    <string name="widget_running">Running…</string>
+    <string name="widget_success">Build succeeded</string>
+    <string name="widget_failed">Build failed</string>
+    <string name="widget_cancelled">Cancelled</string>
+    <string name="widget_failed_at">Failed at: %1$s</string>
+    <string name="widget_error">Could not load status</string>
+    <string name="diagnose">Diagnose failure</string>
+    <string name="diag_none">No failed job in this run</string>
 </resources>

@@ -1,4 +1,4 @@
-package app.gitforge
+package app.repodeck
 
 import android.content.ContentResolver
 import android.content.Context

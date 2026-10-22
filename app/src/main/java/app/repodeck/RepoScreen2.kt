@@ -1,4 +1,4 @@
-package app.gitforge
+package app.repodeck
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,7 +23,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import java.io.File
 
@@ -111,10 +113,19 @@ fun ActionsTab(owner: String, name: String, ref: String) {
         }
     }
 
+    LaunchedEffect(runs.state) {
+        if (runs.state is Res.Ok && Graph.store.widgetRepo == "$owner/$name") BuildWidget.requestUpdate(ctx)
+    }
+
     LazyColumn(Modifier.fillMaxSize()) {
         item {
             Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { addWf = true }) { Text(stringResource(R.string.add_workflow)) }
+                OutlinedButton(onClick = {
+                    Graph.store.widgetRepo = "$owner/$name"
+                    BuildWidget.requestUpdate(ctx)
+                    act.toast(ctx.getString(R.string.widget_pinned))
+                }) { Text(stringResource(R.string.pin_widget)) }
             }
             if (act.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             SectionTitle(stringResource(R.string.workflows))
@@ -187,8 +198,10 @@ fun RunDialog(owner: String, name: String, run: JsonObject, onClose: () -> Unit,
     val arts = rememberLoader(id) { Graph.api.get("$base/runs/$id/artifacts").o().list("artifacts") }
     val act = rememberAction()
     var log by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var diag by remember { mutableStateOf<String?>(null) }
     val files = remember { mutableStateMapOf<Long, File>() }
     val info = remember { mutableStateMapOf<Long, String>() }
+    val apks = remember { mutableStateMapOf<Long, List<File>>() }
 
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize()) {
@@ -204,6 +217,7 @@ fun RunDialog(owner: String, name: String, run: JsonObject, onClose: () -> Unit,
                             OutlinedButton(onClick = { act.run("rerun $id", onOk = onChanged) { Graph.api.send("POST", "$base/runs/$id/rerun") } }) { Text(stringResource(R.string.rerun)) }
                             OutlinedButton(onClick = { act.run("rerun failed $id", onOk = onChanged) { Graph.api.send("POST", "$base/runs/$id/rerun-failed-jobs") } }) { Text(stringResource(R.string.rerun_failed)) }
                             OutlinedButton(onClick = { act.run("cancel $id", onOk = onChanged) { Graph.api.send("POST", "$base/runs/$id/cancel") } }) { Text(stringResource(R.string.cancel_run)) }
+                            OutlinedButton(onClick = { act.run("diagnose $id") { diag = BuildDoctor.diagnose(ctx, base, jobs.valueOrNull().orEmpty()) } }) { Text(stringResource(R.string.diagnose)) }
                             OutlinedButton(onClick = { uri.openUri(run.s("html_url")) }) { Text(stringResource(R.string.open_browser)) }
                         }
                         if (act.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -212,7 +226,7 @@ fun RunDialog(owner: String, name: String, run: JsonObject, onClose: () -> Unit,
                     when (val s = jobs.state) {
                         is Res.Ok -> items(s.v, key = { "j" + it.n("id") }) { j ->
                             Column(Modifier.clickable {
-                                act.run("log ${j.s("name")}") { log = j.s("name") to Graph.api.send("GET", "$base/jobs/${j.n("id")}/logs").body.takeLast(200_000) }
+                                act.run("log ${j.s("name")}") { log = j.s("name") to BuildDoctor.clean(Graph.api.send("GET", "$base/jobs/${j.n("id")}/logs").body).takeLast(200_000) }
                             }.padding(horizontal = 16.dp, vertical = 8.dp)) {
                                 Text("${j.s("name")} — ${j.s("conclusion").ifEmpty { j.s("status") }}", style = MaterialTheme.typography.titleSmall)
                                 j.list("steps").forEach { st ->
@@ -237,19 +251,23 @@ fun RunDialog(owner: String, name: String, run: JsonObject, onClose: () -> Unit,
                                         Row {
                                             IconButton(enabled = !a.b("expired"), onClick = {
                                                 act.run("download ${a.s("name")}") {
-                                                    val f = File(ctx.cacheDir, "downloads/${a.s("name")}-$aid.zip")
+                                                    val prefix = "$name-run${run.n("run_number")}"
+                                                    val f = File(Downloads.dir(ctx), "$prefix-${a.s("name")}.zip")
                                                     Graph.api.download("https://api.github.com$base/artifacts/$aid/zip", f) { d, t -> info[aid] = "${Fmt.size(d)} / ${Fmt.size(t)}" }
                                                     files[aid] = f
-                                                    info[aid] = ZipTools.verify(f)
+                                                    val result = withContext(Dispatchers.IO) {
+                                                        val extracted = ZipTools.extractApks(f, Downloads.dir(ctx), prefix)
+                                                        val saved = (listOf(f) + extracted).count { Downloads.exportToPublic(ctx, it) }
+                                                        Triple(extracted, saved, ZipTools.verify(f))
+                                                    }
+                                                    apks[aid] = result.first
+                                                    info[aid] = result.third + "\n" + ctx.getString(if (result.second > 0) R.string.saved_public else R.string.saved_app_only)
                                                 }
                                             }) { Icon(Icons.Default.Download, stringResource(R.string.download)) }
-                                            files[aid]?.let { f ->
-                                                IconButton(onClick = {
-                                                    act.run("install apk") {
-                                                        val apk = ZipTools.extractApk(f, File(ctx.cacheDir, "downloads")) ?: throw IllegalStateException(ctx.getString(R.string.no_apk))
-                                                        Installer.install(ctx, apk)
-                                                    }
-                                                }) { Icon(Icons.Default.InstallMobile, stringResource(R.string.install)) }
+                                            (apks[aid]?.let { l -> l.firstOrNull { it.name.contains("release") } ?: l.firstOrNull() })?.let { apk ->
+                                                IconButton(onClick = { act.run("install apk") { Installer.install(ctx, apk) } }) {
+                                                    Icon(Icons.Default.InstallMobile, stringResource(R.string.install))
+                                                }
                                             }
                                         }
                                     }
@@ -263,7 +281,7 @@ fun RunDialog(owner: String, name: String, run: JsonObject, onClose: () -> Unit,
                             act.run("run logs $id") {
                                 val f = File(ctx.cacheDir, "downloads/logs-$id.zip")
                                 Graph.api.download("https://api.github.com$base/runs/$id/logs", f)
-                                log = "logs #$id" to ZipTools.readLogZip(f)
+                                log = "logs #$id" to BuildDoctor.clean(ZipTools.readLogZip(f))
                             }
                         }, modifier = Modifier.padding(8.dp)) { Text(stringResource(R.string.full_logs)) }
                     }
@@ -272,6 +290,7 @@ fun RunDialog(owner: String, name: String, run: JsonObject, onClose: () -> Unit,
         }
     }
     log?.let { (t, txt) -> TextViewerDialog(t, txt) { log = null } }
+    diag?.let { TextViewerDialog(stringResource(R.string.diagnose), it) { diag = null } }
 }
 
 @Composable

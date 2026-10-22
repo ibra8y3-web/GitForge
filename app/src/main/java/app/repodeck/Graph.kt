@@ -1,4 +1,4 @@
-package app.gitforge
+package app.repodeck
 
 import android.app.Application
 import android.app.NotificationChannel
@@ -71,6 +71,10 @@ class Store(private val ctx: Context) {
     var clientId: String
         get() = prefs.getString("client_id", "") ?: ""
         set(v) { prefs.edit().putString("client_id", v).apply() }
+
+    var widgetRepo: String
+        get() = prefs.getString("widget_repo", "") ?: ""
+        set(v) { prefs.edit().putString("widget_repo", v).apply() }
 
     var clientSecret: String
         get() = prefs.getString("client_secret", "") ?: ""
@@ -155,7 +159,7 @@ object Graph {
     }
 }
 
-class GitForgeApp : Application() {
+class RepoDeckApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Graph.init(this)
