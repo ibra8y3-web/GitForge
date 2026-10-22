@@ -52,6 +52,18 @@ jobs:
           path: '**/build/outputs/apk/debug/*.apk'
 """
 
+private val RELEASE_STEP = """      - name: Publish release (auto version)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${'$'}{{ github.run_number }}
+          name: Build ${'$'}{{ github.run_number }}
+          target_commitish: ${'$'}{{ github.sha }}
+          files: '**/build/outputs/apk/debug/*.apk'
+          generate_release_notes: true
+"""
+
+private val ANDROID_REL = ANDROID_WF.replace("jobs:\n", "permissions:\n  contents: write\njobs:\n") + RELEASE_STEP
+
 private val NODE_WF = """name: Node CI
 on:
   push:
@@ -151,11 +163,12 @@ fun ActionsTab(owner: String, name: String, ref: String) {
         }
     }
     if (addWf) {
-        FormDialog(stringResource(R.string.add_workflow), listOf(Field(stringResource(R.string.file_path), ".github/workflows/build.yml"), Field(stringResource(R.string.template_type), "android")), onDismiss = { addWf = false }) { v, _ ->
+        FormDialog(stringResource(R.string.add_workflow), listOf(Field(stringResource(R.string.file_path), ".github/workflows/build.yml"), Field(stringResource(R.string.template_type), "android"), Field(stringResource(R.string.auto_release), "yes")), onDismiss = { addWf = false }) { v, _ ->
             act.run("add workflow ${v[0]}", onOk = { wfs.reload() }) {
                 val root = Graph.api.get("/repos/$owner/$name/contents?ref=${Uri.encode(ref)}").items().map { it.s("name") }.toSet()
                 val type = v[1].trim().ifEmpty { GitIgnore.detect(root) }
-                val tpl = if (type == "node") NODE_WF else ANDROID_WF
+                val auto = v[2].trim().lowercase() !in listOf("no", "n", "لا")
+                val tpl = if (type == "node") NODE_WF else if (auto) ANDROID_REL else ANDROID_WF
                 putFile(owner, name, ref, v[0].trim(), tpl.toByteArray(), "Add CI workflow")
             }
         }

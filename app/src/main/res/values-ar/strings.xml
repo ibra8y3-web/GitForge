@@ -172,4 +172,5 @@
     <string name="browser_help">اجعل Authorization callback URL في الـ OAuth App هو gitforge://oauth. السر يُخزَّن على هذا الهاتف فقط ومشفّرًا.</string>
     <string name="sign_in_browser">تسجيل الدخول من المتصفح</string>
     <string name="fill_name">ملء الاسم تلقائيًا</string>
+    <string name="auto_release">إصدار تلقائي برقم نسخة (yes / no)</string>
 </resources>

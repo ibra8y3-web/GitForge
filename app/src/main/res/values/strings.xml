@@ -172,4 +172,5 @@
     <string name="browser_help">Set the OAuth App\'s Authorization callback URL to gitforge://oauth. The secret is stored only on this phone, encrypted.</string>
     <string name="sign_in_browser">Sign in with browser</string>
     <string name="fill_name">Fill in the name</string>
+    <string name="auto_release">Auto release with version (yes / no)</string>
 </resources>
