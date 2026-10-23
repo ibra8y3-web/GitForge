@@ -18,12 +18,15 @@ private val Light = lightColorScheme(
     primary = Color(0xFF4F46E5), onPrimary = Color.White,
     primaryContainer = Color(0xFFE0E7FF), onPrimaryContainer = Color(0xFF1E1B4B),
     secondary = Color(0xFF0D9488), onSecondary = Color.White,
-    secondaryContainer = Color(0xFFCCFBF1), onSecondaryContainer = Color(0xFF042F2E),
+    secondaryContainer = Color(0xFFE0E7FF), onSecondaryContainer = Color(0xFF1E1B4B),
     tertiary = Color(0xFFD97706), tertiaryContainer = Color(0xFFFEF3C7), onTertiaryContainer = Color(0xFF451A03),
     background = Color(0xFFF6F7FB), onBackground = Color(0xFF111827),
     surface = Color.White, onSurface = Color(0xFF111827),
     surfaceVariant = Color(0xFFEEF0F8), onSurfaceVariant = Color(0xFF4B5563),
     outline = Color(0xFF9CA3AF), outlineVariant = Color(0xFFE5E7EB),
+    surfaceTint = Color(0xFF4F46E5),
+    surfaceContainerLowest = Color.White, surfaceContainerLow = Color(0xFFF6F7FB), surfaceContainer = Color(0xFFF0F2FA),
+    surfaceContainerHigh = Color(0xFFEAEDF8), surfaceContainerHighest = Color(0xFFE3E7F4),
     error = Color(0xFFDC2626)
 )
 
@@ -31,12 +34,15 @@ private val Dark = darkColorScheme(
     primary = Color(0xFFA5B4FC), onPrimary = Color(0xFF1E1B4B),
     primaryContainer = Color(0xFF312E81), onPrimaryContainer = Color(0xFFE0E7FF),
     secondary = Color(0xFF5EEAD4), onSecondary = Color(0xFF042F2E),
-    secondaryContainer = Color(0xFF134E4A), onSecondaryContainer = Color(0xFFCCFBF1),
+    secondaryContainer = Color(0xFF312E81), onSecondaryContainer = Color(0xFFE0E7FF),
     tertiary = Color(0xFFFBBF24), tertiaryContainer = Color(0xFF78350F), onTertiaryContainer = Color(0xFFFEF3C7),
     background = Color(0xFF0B0E14), onBackground = Color(0xFFE5E7EB),
     surface = Color(0xFF12161F), onSurface = Color(0xFFE5E7EB),
     surfaceVariant = Color(0xFF1C2230), onSurfaceVariant = Color(0xFF9CA3AF),
     outline = Color(0xFF4B5563), outlineVariant = Color(0xFF262C3A),
+    surfaceTint = Color(0xFFA5B4FC),
+    surfaceContainerLowest = Color(0xFF0B0E14), surfaceContainerLow = Color(0xFF0F131B), surfaceContainer = Color(0xFF151A24),
+    surfaceContainerHigh = Color(0xFF1B2130), surfaceContainerHighest = Color(0xFF232A3A),
     error = Color(0xFFF87171)
 )
 

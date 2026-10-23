@@ -207,4 +207,5 @@
     <string name="widget_error">Could not load status</string>
     <string name="diagnose">Diagnose failure</string>
     <string name="diag_none">No failed job in this run</string>
+    <string name="stat_total">Total</string>
 </resources>

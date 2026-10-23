@@ -72,7 +72,7 @@ fun DownloadsScreen(nav: NavController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.downloads)) }, actions = {
+            BrandTopBar(title = { Text(stringResource(R.string.downloads)) }, actions = {
                 IconButton(onClick = { files = Downloads.list(ctx) }) { Icon(Icons.Default.Refresh, stringResource(R.string.refresh)) }
             })
         },

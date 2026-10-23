@@ -37,7 +37,7 @@ fun RepoScreen(nav: NavController, owner: String, name: String) {
         R.string.tab_releases, R.string.tab_issues, R.string.tab_prs, R.string.tab_local, R.string.tab_settings)
     var ref by remember { mutableStateOf("") }
     Scaffold(topBar = {
-        TopAppBar(
+        BrandTopBar(
             title = { Text("$owner/$name", maxLines = 1) },
             navigationIcon = { IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
             actions = { IconButton(onClick = { repo.reload() }) { Icon(Icons.Default.Refresh, stringResource(R.string.refresh)) } }
@@ -165,7 +165,7 @@ fun FileEditor(owner: String, name: String, ref: String, f: JsonObject, onClose:
     androidx.compose.ui.window.Dialog(onDismissRequest = onClose, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize()) {
             Scaffold(topBar = {
-                TopAppBar(title = { Text(f.s("name"), maxLines = 1) }, actions = {
+                BrandTopBar(title = { Text(f.s("name"), maxLines = 1) }, actions = {
                     if (isMd && text != null) TextButton(onClick = { preview = !preview }) { Text(stringResource(if (preview) R.string.edit_mode else R.string.preview)) }
                     TextButton(enabled = text != null && !act.busy, onClick = {
                         act.run("edit ${f.s("path")}", onOk = { onSaved(); onClose() }) { putFile(owner, name, ref, f.s("path"), text!!.toByteArray(), msg) }

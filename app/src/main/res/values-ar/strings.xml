@@ -207,4 +207,5 @@
     <string name="widget_error">تعذّر تحميل الحالة</string>
     <string name="diagnose">تشخيص الفشل</string>
     <string name="diag_none">لا توجد مهمة فاشلة في هذا التشغيل</string>
+    <string name="stat_total">الإجمالي</string>
 </resources>

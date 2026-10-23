@@ -206,7 +206,7 @@ fun RunDialog(owner: String, name: String, run: JsonObject, onClose: () -> Unit,
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize()) {
             Scaffold(topBar = {
-                TopAppBar(title = { Text("#${run.n("run_number")} ${run.s("name")}", maxLines = 1) }, actions = {
+                BrandTopBar(title = { Text("#${run.n("run_number")} ${run.s("name")}", maxLines = 1) }, actions = {
                     IconButton(onClick = { jobs.reload(); arts.reload() }) { Icon(Icons.Default.Refresh, null) }
                     TextButton(onClick = onClose) { Text(stringResource(R.string.close)) }
                 })
@@ -402,7 +402,7 @@ fun ThreadDialog(owner: String, name: String, t: JsonObject, pulls: Boolean, onC
     val closed = t.s("state") == "closed"
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize()) {
-            Scaffold(topBar = { TopAppBar(title = { Text("#$n ${t.s("title")}", maxLines = 1) }, actions = { TextButton(onClick = onClose) { Text(stringResource(R.string.close)) } }) }) { pad ->
+            Scaffold(topBar = { BrandTopBar(title = { Text("#$n ${t.s("title")}", maxLines = 1) }, actions = { TextButton(onClick = onClose) { Text(stringResource(R.string.close)) } }) }) { pad ->
                 Column(Modifier.padding(pad).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(t.s("body").ifEmpty { "—" }, maxLines = 8)
                     Row(Modifier.horizontalScrollSafe(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

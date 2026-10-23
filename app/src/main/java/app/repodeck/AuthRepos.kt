@@ -4,7 +4,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -183,12 +185,13 @@ fun ReposScreen(nav: NavController) {
     var notifs by remember { mutableStateOf(false) }
     var bulkDelete by remember { mutableStateOf(false) }
     val selected = remember { mutableStateListOf<String>() }
+    val listState = rememberLazyListState()
     val filters = listOf(R.string.f_all, R.string.f_private, R.string.f_public, R.string.f_forks, R.string.f_archived, R.string.f_owned)
 
     Scaffold(
         topBar = {
             if (selected.isNotEmpty()) {
-                TopAppBar(
+                BrandTopBar(
                     title = { Text("${selected.size}") },
                     navigationIcon = { IconButton(onClick = { selected.clear() }) { Icon(Icons.Default.Close, null) } },
                     actions = {
@@ -202,7 +205,7 @@ fun ReposScreen(nav: NavController) {
                     }
                 )
             } else {
-                TopAppBar(
+                BrandTopBar(
                     title = { Text(stringResource(R.string.repositories)) },
                     actions = {
                         IconButton(onClick = { notifs = true }) { Icon(Icons.Default.Notifications, stringResource(R.string.notifications)) }
@@ -234,20 +237,29 @@ fun ReposScreen(nav: NavController) {
         },
         bottomBar = { AppBottomBar(nav, "repos") },
         floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = { create = true }, icon = { Icon(Icons.Default.Add, null) }, text = { Text(stringResource(R.string.new_repo)) })
+            ExtendedFloatingActionButton(
+                onClick = { create = true }, expanded = listState.firstVisibleItemIndex == 0,
+                containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary,
+                icon = { Icon(Icons.Default.Add, null) }, text = { Text(stringResource(R.string.new_repo)) }
+            )
         }
     ) { pad ->
         Column(Modifier.padding(pad)) {
             OutlinedTextField(
                 query, { query = it }, singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface, unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                ),
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 placeholder = { Text(stringResource(R.string.search)) },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
+                modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 12.dp)
             )
             Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp).horizontalScrollCompat(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 filters.forEachIndexed { i, f -> FilterChip(filter == i, { filter = i }, label = { Text(stringResource(f)) }) }
             }
-            LoaderView(repos) { all ->
+            LoaderView(repos, skeleton = true) { all ->
                 val myLogin = me.valueOrNull()?.s("login").orEmpty()
                 val shown = all.filter { r ->
                     (query.isBlank() || r.s("full_name").contains(query, true) || r.s("description").contains(query, true)) &&
@@ -258,7 +270,7 @@ fun ReposScreen(nav: NavController) {
                         }
                 }
                 if (shown.isEmpty()) EmptyState(stringResource(R.string.no_repos))
-                else LazyColumn(contentPadding = PaddingValues(12.dp, 4.dp, 12.dp, 96.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                else LazyColumn(state = listState, contentPadding = PaddingValues(12.dp, 4.dp, 12.dp, 96.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     me.valueOrNull()?.let { m -> item { HeroCard(m, all) } }
                     item { Text(stringResource(R.string.repo_count, shown.size, all.size), style = MaterialTheme.typography.labelMedium) }
                     items(shown, key = { it.n("id") }) { r -> RepoCard(r, selected, nav) }
@@ -290,7 +302,8 @@ private fun RepoCard(r: JsonObject, selected: MutableList<String>, nav: NavContr
         ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -389,7 +402,7 @@ private fun NotificationsDialog(onClose: () -> Unit) {
     androidx.compose.ui.window.Dialog(onDismissRequest = onClose, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize()) {
             Scaffold(topBar = {
-                TopAppBar(title = { Text(stringResource(R.string.notifications)) }, actions = {
+                BrandTopBar(title = { Text(stringResource(R.string.notifications)) }, actions = {
                     TextButton(onClick = { act.run("notifications read", onOk = { l.reload() }) { Graph.api.send("PUT", "/notifications", obj("read" to true)) } }) { Text(stringResource(R.string.mark_read)) }
                     TextButton(onClick = onClose) { Text(stringResource(R.string.close)) }
                 })

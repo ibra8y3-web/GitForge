@@ -57,7 +57,7 @@ fun UploadScreen(nav: NavController) {
     }
 
     Scaffold(topBar = {
-        TopAppBar(title = { Text(stringResource(R.string.upload_project)) },
+        BrandTopBar(title = { Text(stringResource(R.string.upload_project)) },
             navigationIcon = { IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } })
     }, bottomBar = { AppBottomBar(nav, "upload") }) { pad ->
         Column(Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -150,7 +150,7 @@ fun SettingsScreen(nav: NavController) {
     }
 
     Scaffold(topBar = {
-        TopAppBar(title = { Text(stringResource(R.string.settings)) },
+        BrandTopBar(title = { Text(stringResource(R.string.settings)) },
             navigationIcon = { IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } })
     }, bottomBar = { AppBottomBar(nav, "settings") }) { pad ->
         Column(Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -195,7 +195,7 @@ fun SettingsScreen(nav: NavController) {
 @Composable
 fun LogsScreen(nav: NavController) {
     Scaffold(topBar = {
-        TopAppBar(title = { Text(stringResource(R.string.op_log)) },
+        BrandTopBar(title = { Text(stringResource(R.string.op_log)) },
             navigationIcon = { IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
             actions = { TextButton(onClick = { OpLog.clear() }) { Text(stringResource(R.string.clear)) } })
     }) { pad ->

@@ -9,6 +9,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -96,9 +98,9 @@ fun rememberAction(): Action {
 }
 
 @Composable
-fun <T> LoaderView(l: Loader<T>, modifier: Modifier = Modifier, content: @Composable (T) -> Unit) {
+fun <T> LoaderView(l: Loader<T>, modifier: Modifier = Modifier, skeleton: Boolean = false, content: @Composable (T) -> Unit) {
     when (val s = l.state) {
-        is Res.Loading -> Box(modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+        is Res.Loading -> if (skeleton) SkeletonList(modifier) else Box(modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
         is Res.Err -> Column(
             modifier.fillMaxSize().padding(24.dp),
             verticalArrangement = Arrangement.Center,
@@ -116,7 +118,16 @@ fun <T> LoaderView(l: Loader<T>, modifier: Modifier = Modifier, content: @Compos
 
 @Composable
 fun EmptyState(text: String) {
-    Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
+    Column(
+        Modifier.fillMaxSize().padding(32.dp),
+        verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(72.dp)) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Inbox, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+        }
+        Spacer(Modifier.height(16.dp))
         Text(text, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -211,7 +222,7 @@ fun TextViewerDialog(title: String, text: String, onClose: () -> Unit) {
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize()) {
             Scaffold(topBar = {
-                TopAppBar(title = { Text(title, maxLines = 1) }, actions = {
+                BrandTopBar(title = { Text(title, maxLines = 1) }, actions = {
                     TextButton(onClick = onClose) { Text(stringResource(R.string.close)) }
                 })
             }) { pad ->

@@ -14,7 +14,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
-        versionName = "1.2.0"
+        versionName = "1.3.0"
         val oauthId = ((project.findProperty("OAUTH_CLIENT_ID") as String?) ?: System.getenv("OAUTH_CLIENT_ID") ?: "").trim()
         buildConfigField("String", "OAUTH_CLIENT_ID", "\"$oauthId\"")
         resourceConfigurations += listOf("en", "ar")

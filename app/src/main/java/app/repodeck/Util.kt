@@ -45,14 +45,16 @@ object Fmt {
         else -> e.message ?: e::class.simpleName ?: "Error"
     }
 
-    fun size(b: Long): String = when {
+    private fun ltr(s: String) = "\u2066$s\u2069"
+
+    fun size(b: Long): String = ltr(when {
         b < 1024 -> "$b B"
         b < 1024 * 1024 -> "%.1f KB".format(b / 1024.0)
         b < 1024L * 1024 * 1024 -> "%.1f MB".format(b / 1048576.0)
         else -> "%.2f GB".format(b / 1073741824.0)
-    }
+    })
 
-    fun time(iso: String?): String = iso?.replace("T", " ")?.removeSuffix("Z")?.take(16) ?: ""
+    fun time(iso: String?): String = iso?.replace("T", " ")?.removeSuffix("Z")?.take(16)?.let { ltr(it) } ?: ""
 }
 
 fun Uri.displayName(ctx: Context): String {
